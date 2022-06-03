@@ -6,7 +6,12 @@ const inquirer = require('inquirer');
 const Employee = require('./lib/Employee');
 const Manager = require('./lib/Manager');
 const Engineer = require('./lib/Engineer');
-const Intern = require('./lib/Intern'); 
+const Intern = require('./lib/Intern');
+
+//Logger
+const Logger = require('./lib/logger');
+const { default: generate } = require('@babel/generator');
+const log = new Logger();
 
 // Team array
 const team = [];
@@ -22,20 +27,20 @@ const addManager = () => {
                 if (entry){
                     return true;
                 }else{
-                    console.log('\n', '\x1b[31mPlease enter the team manager\'s name\x1b[0m');
+                    log.red('\n', 'Please enter the team manager\'s name');
                     return false;
                 }
             }
         },
         {
-            type: 'input',
+            type: 'number',
             name: 'id',
             message: 'Enter the team manager\'s ID',
             validate: entry => {
                 if (entry){
                     return true;
                 }else{
-                    console.log('\n', '\x1b[31mPlease enter the team manager\'s ID\x1b[0m');
+                    log.red('\n', 'Please enter the team manager\'s ID number');
                     return false;
                 }
             }
@@ -49,7 +54,7 @@ const addManager = () => {
                 if (valid){
                     return true;
                 }else{
-                    console.log('\n', '\x1b[31mWrong format!, Please enter the team manager\'s email. Ex: joe@email.com\x1b[0m');
+                    log.red('\n', 'Wrong format!, Please enter the team manager\'s email. Ex: joe@email.com');
                     return false;
                 }
             }
@@ -63,7 +68,7 @@ const addManager = () => {
                 if (valid){
                     return true;
                 }else{
-                    console.log('\n', '\x1b[31mWrong format!, Please enter the team manager\'s office phone number. Ex: \(000\)000-0000\x1b[0m');
+                    log.red('\n', 'Wrong format!, Please enter the team manager\'s office phone number. Ex: (000)000-0000');
                     return false;
                 }
             }
@@ -75,7 +80,7 @@ const addManager = () => {
         // Add the manager to the array team
         team.push(manager);
         const print = JSON.stringify(manager, null, " ");
-        console.log("\x1b[36m%s\x1b[0m",'Manager: ' + print);
+        log.cyan('Manager: ' + print);
     })
 };
 
@@ -83,7 +88,7 @@ const addManager = () => {
 const addEmployee = () => {
     
     //Color the console text yellow
-    console.log("\x1b[33m%s\x1b[0m", '#### Enter Team member\'s information ####');
+    log.yellow('#### Enter Team member\'s information ####');
     
     return inquirer.prompt ([
         {
@@ -100,20 +105,20 @@ const addEmployee = () => {
                 if (entry){
                     return true;
                 }else{
-                    console.log('\n', '\x1b[31mPlease enter the employee\'s name\x1b[0m');
+                    log.red('\n', 'Please enter the employee\'s name');
                     return false;
                 }
             }
         },
         {
-            type: 'input',
+            type: 'number',
             name: 'id',
             message: 'Enter the employee\'s ID',
             validate: entry => {
                 if (entry){
                     return true;
                 }else{
-                    console.log('\n', '\x1b[31mPlease enter the employee\'s ID\x1b[0m');
+                    log.red('\n', 'Please enter the employee\'s ID number');
                     return false;
                 }
             }
@@ -127,7 +132,7 @@ const addEmployee = () => {
                 if (valid){
                     return true;
                 }else{
-                    console.log('\n', '\x1b[31mWrong format!, Please enter the employee\'s email. Ex: joe@email.com\x1b[0m');
+                    log.red('\n', 'Wrong format!, Please enter the employee\'s email. Ex: joe@email.com');
                     return false;
                 }
             }
@@ -141,7 +146,7 @@ const addEmployee = () => {
                 if (entry) {
                     return true;
                 } else {
-                    console.log ('\n', '\x1b[31mPlease enter the employee\'s github username\x1b[0m')
+                    log.red('\n', 'Please enter the employee\'s github username')
                 }
             }
         },
@@ -154,15 +159,14 @@ const addEmployee = () => {
                 if (entry) {
                     return true;
                 } else {
-                    console.log ('\n', '\x1b[31mPlease enter the intern\'s school name\x1b[0m')
+                    log.red('\n', 'Please enter the intern\'s school name')
                 }
             }
         },
         {
             type: 'confirm',
             name: 'stop',
-            message: 'Would you like to finish building your team?',
-            default: true
+            message: 'Would you like to finish building your team?'
         }
     ]).then(employeeInfo => {
         const {name, id, email, role, github, school, stop} = employeeInfo;
@@ -174,12 +178,12 @@ const addEmployee = () => {
             employee = new Engineer(name, id, email, github);
             //Print Engineer to console
             const print = JSON.stringify(employee, null, " ");
-            console.info("\x1b[36m%s\x1b[0m", 'Engineer: ' + print);
+            log.cyan('Engineer: ' + print);
         }else{
             employee = new Intern(name, id, email, school);
             //Print Intern to console
             const print = JSON.stringify(employee, null, " ");
-            console.info("\x1b[36m%s\x1b[0m", 'Intern: ' + print);
+            log.cyan('Intern: ' + print);
         }
         
         // Add the employee (either Engineer or Intern) to the array team
@@ -187,9 +191,11 @@ const addEmployee = () => {
         
         //Print Employee to console
         //const print = JSON.stringify(employee, null, " ");
-        //console.info("\x1b[36m%s\x1b[0m", 'Team member: ' + print);
+        //log.cyan('Team member: ' + print);
 
         if (stop) {
+            const print = JSON.stringify(team, null, " ");
+            log.cyan('Team: ' + print);
             return team;
         } else {
             return addEmployee(team); 
@@ -197,10 +203,12 @@ const addEmployee = () => {
     })
 };
 
-// Ask Manager questions
+// Ask Manager questions first
 addManager()
-    // Then the Employee questions
-  .then(addEmployee)
-  .catch(err => {
- console.log(err);
-  });
+// Then the Employee questions
+.then(addEmployee)
+//Then pass the team array to generateHTML function in generateHTML.js
+.then(generateHTML(team))
+.catch(err => {
+    console.log(err);
+});
