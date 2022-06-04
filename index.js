@@ -13,6 +13,9 @@ const Logger = require('./lib/logger');
 const { default: generate } = require('@babel/generator');
 const log = new Logger();
 
+//HTML constructors
+const generateHTML = require('./src/generateHTML');
+
 // Team array
 const team = [];
 
@@ -203,12 +206,32 @@ const addEmployee = () => {
     })
 };
 
+//Write to File function
+const writeToFile = data => {
+    fs.writeFile('./dist/index.html', data, err => {
+        // if there is an error 
+        if (err) {
+            console.log(err);
+            return;
+        // when the page has been created 
+        } else {
+            console.log("Your team profile has been successfully created! Please check out the /dist/index.html")
+        }
+    })
+}
 // Ask Manager questions first
 addManager()
 // Then the Employee questions
 .then(addEmployee)
-//Then pass the team array to generateHTML function in generateHTML.js
-.then(generateHTML(team))
+// Then when the addEmployee function is returned it will contain the complete team array
+// Then pass the team array to generateHTML function in /src/generateHTML.js
+.then(arrayToHTML => {
+    return generateHTML(arrayToHTML);
+})
+//Then pass generateTeamHTML (which is the complete team profile html raw data) to the writeToFile function here
+.then(HTMLRawToFile => {
+    return writeToFile(HTMLRawToFile);
+})
 .catch(err => {
     console.log(err);
 });
